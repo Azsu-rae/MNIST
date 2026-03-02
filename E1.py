@@ -4,8 +4,10 @@ n = 10000000
 total = 0
 
 start = time.time()
+
 for i in range(1, n + 1):
     total += i
+
 end = time.time()
 non_optimal = end - start
 
