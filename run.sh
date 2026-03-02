@@ -1,3 +1,3 @@
 #! /bin/bash
 
-python3 E2.py
+python3 E3.py
