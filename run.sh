@@ -1,3 +1,4 @@
 #! /bin/bash
 
-python3 E3.py
+gcc serial/main.c serial/mnist.c
+./a.out
