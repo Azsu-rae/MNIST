@@ -2,12 +2,16 @@
 #include "utils.h"
 
 #include <arpa/inet.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "mnist.h"
 
 #define TRAIN_IMG "./dataset/MNIST/train-images.idx3-ubyte"
 #define TRAIN_LBL "./dataset/MNIST/train-labels.idx1-ubyte"
+
+#define TEST_IMG "./dataset/MNIST/t10k-images.idx3-ubyte"
+#define TEST_LBL "./dataset/MNIST/t10k-labels.idx1-ubyte"
 
 /*
  *
@@ -46,6 +50,16 @@ uint8_t readbyte(FILE* f) {
     } return buf;
 }
 
+Dataset* Dataset_test() {
+    FILE* fl = open_or_die(TEST_LBL);
+    FILE* fi = open_or_die(TEST_LBL);
+
+    fclose(fl);
+    fclose(fi);
+
+    return NULL;
+}
+
 Dataset* Dataset_train() {
     FILE* fl = open_or_die(TRAIN_LBL);
     uint32_t magic_lbl = read4bytes(fl);
@@ -70,15 +84,8 @@ Dataset* Dataset_train() {
 
     Dataset* dataset = Dataset_ctor(size, (Shape){.rows = rows, .cols = cols});
 
-    for (int k = 0; k < size; k++) {
-        Image img = dataset->index(dataset, k);
-        img.label(img, readbyte(fl));
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                img.set(img, i, j, readbyte(fi));
-            }
-        }
-    }
+    fread(dataset->content, 1, size * rows * cols, fi);
+    fread(dataset->labels, 1, size, fl);
 
     Image img = dataset->index(dataset, 0);
     img.print(img);

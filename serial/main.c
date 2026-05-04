@@ -8,6 +8,6 @@
 
 int main() {
     Dataset* dataset = Dataset_train();
-    Dataset_dtor(dataset);
+    // Dataset_dtor(dataset);
     return 0;
 }

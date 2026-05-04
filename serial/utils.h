@@ -10,6 +10,8 @@
 FILE* open_or_die(const char* path);
 uint32_t read4bytes(FILE* f);
 uint8_t readbyte(FILE* f);
+
 Dataset* Dataset_train();
+Dataset* Dataset_test();
 
 #endif
