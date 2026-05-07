@@ -1,0 +1,14 @@
+Endianess
+
+0x 00 00 00 01
+
+if we consider the leftmost byte to be the most significant, meaning a big-endian number, that would yield the value
+
+00 * 2^24 + 00 * 2^16 + 00 * 2^8 + 01 * 2^0 = 1
+
+big-endian stores the numbers the same way humans write them
+
+but if we consider the rightmost byte to be the most significant, meaning a little-endian number, that would instead yield the value
+
+00 * 2^0 + 00 * 2^8 + 00 * 2^16 + 01 * 2^24 = 2^24
+

@@ -1,7 +1,6 @@
 
 #include "utils.h"
 
-#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,80 +14,70 @@
 
 /*
  *
- * Image files (idx3):
- * [0..3]   magic number  = 0x00000803 (from byte 0 to byte 3 inclusive)
- * [4..7]   num_images
- * [8..11]  num_rows  (28)
- * [12..15] num_cols  (28)
- * [16..]   pixels: uint8, row-major, one byte per pixel
- *
- * Label files (idx1):
- * [0..3]   magic number = 0x00000801
- * [4..7]   num_labels
- * [8..]    labels: uint8, value 0-9
+ * https://www.fon.hum.uva.nl/praat/manual/IDX_file_format.html
  *
  ***/
 
 // clang-format off
-FILE* open_or_die(const char* path) {
+FILE* _open_or_die(const char* path) {
     FILE* f = fopen(path, "rb");
     if (!f) { perror("fopen"); exit(1); }
     return f;
 }
 
-uint32_t read4bytes(FILE* f) {
+uint32_t _read4bytes(FILE* f) {
     uint32_t buf;
     if (fread(&buf, sizeof(buf), 1, f) != 1) {
       fprintf(stderr, "short read\n"); exit(1);
-    } return ntohl(buf);
+    } return ((buf << 24) & 0xFF000000) |
+             ((buf << 8)  & 0x00FF0000) |
+             ((buf >> 24) & 0x000000FF) |
+             ((buf >> 8)  & 0x0000FF00);
 }
 
-uint8_t readbyte(FILE* f) {
+uint8_t _readbyte(FILE* f) {
     uint8_t buf;
     if (fread(&buf, sizeof(buf), 1, f) != 1) {
       fprintf(stderr, "short read\n"); exit(1);
     } return buf;
 }
 
-Dataset* Dataset_test() {
-    FILE* fl = open_or_die(TEST_LBL);
-    FILE* fi = open_or_die(TEST_LBL);
+Dataset* _scratch(const char* lbl, const char* img) {
 
-    fclose(fl);
-    fclose(fi);
+    FILE* fl = _open_or_die(lbl);
+    printf("\nreading %s...\n\n", lbl);
 
-    return NULL;
-}
+    printf("first_byte=%u\n", _readbyte(fl));
+    printf("second_byte=%u\n", _readbyte(fl));
+    printf("dtype=%u\n", _readbyte(fl));
+    printf("dims=%u\n", _readbyte(fl));
 
-Dataset* Dataset_train() {
-    FILE* fl = open_or_die(TRAIN_LBL);
-    uint32_t magic_lbl = read4bytes(fl);
-    printf("(label)magic_lbl=%u\n", magic_lbl);
-    uint32_t nb_labels = read4bytes(fl);
-    printf("(label)nb_labels=%u\n", nb_labels);
+    uint32_t nb_labels = _read4bytes(fl);
+    printf("\nnb_labels=%u\n", nb_labels);
 
-    FILE* fi = open_or_die(TRAIN_IMG);
-    uint32_t magic_img = read4bytes(fi);
-    printf("(image)magic_img=%u\n", magic_img);
-    uint32_t size = read4bytes(fi);  //  uint32_t → size_t always safe
-    printf("(image)nb_imgs=%u\n", size);
-    uint32_t rows = read4bytes(fi);
-    printf("(image)rows=%u\n", rows);
-    uint32_t cols = read4bytes(fi);
-    printf("(image)cols=%u\n", cols);
+    FILE* fi = _open_or_die(img);
+    printf("\nreading %s...\n\n", img);
 
-    if (nb_labels != size || magic_lbl != 2049 || magic_img != 2051) {
-        fprintf(stderr, "There's a problem with the inputs!\n");
-        exit(1);
+    printf("first_byte=%u\n", _readbyte(fi));
+    printf("second_byte=%u\n", _readbyte(fi));
+    printf("dtype=%u\n", _readbyte(fi));
+    printf("dims=%u\n", _readbyte(fi));
+
+    uint32_t nb_imgs = _read4bytes(fi);  //  uint32_t → size_t always safe
+    printf("\nnb_imgs=%u\n", nb_imgs);
+    uint32_t dim1 = _read4bytes(fi);
+    printf("dim1=%u\n", dim1);
+    uint32_t dim2 = _read4bytes(fi);
+    printf("dim2=%u\n", dim2);
+
+    Dataset* dataset = Dataset_ctor(nb_imgs, (Shape){.rows = dim1, .cols = dim2});
+
+    size_t training_imgs = nb_imgs * dim1 * dim2;
+    if (fread(dataset->content, 1, training_imgs, fi) != training_imgs) {
+        fprintf(stderr, "\nshort read\n"); exit(1);
+    } if (fread(dataset->labels, 1, nb_labels, fl) != nb_labels) {
+        fprintf(stderr, "\nshort read\n"); exit(1);
     }
-
-    Dataset* dataset = Dataset_ctor(size, (Shape){.rows = rows, .cols = cols});
-
-    fread(dataset->content, 1, size * rows * cols, fi);
-    fread(dataset->labels, 1, size, fl);
-
-    Image img = dataset->index(dataset, 0);
-    img.print(img);
 
     Image img1 = dataset->index(dataset, 1);
     img1.print(img1);
@@ -99,10 +88,16 @@ Dataset* Dataset_train() {
     Image img3 = dataset->index(dataset, 3);
     img3.print(img3);
 
-    // clang-format on
-
-    fclose(fi);
     fclose(fl);
+    fclose(fi);
 
-    return dataset;
+    return NULL;
+}
+
+Dataset* test() {
+    return _scratch(TEST_LBL, TEST_IMG);
+}
+
+Dataset* train() {
+    return _scratch(TRAIN_LBL, TRAIN_IMG);
 }

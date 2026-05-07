@@ -6,7 +6,7 @@
 // clang-format off
 void _print_img(Image img) {
     const char* shades = " .:-=+*#%@";
-    printf("Label: %u", *img.lbl);
+    printf("\nLabel: %u\n", *img.lbl);
     for (int i=0;i<img.shape.rows;i++) {
         for (int j=0;j<img.shape.cols;j++) {
             // divide by 26 to get roughly 10 range of values
@@ -15,7 +15,7 @@ void _print_img(Image img) {
     } printf("\n");
 }
 
-uint8_t _get(Image img, size_t row, size_t col) {
+uint8_t _get_pixel(Image img, size_t row, size_t col) {
     if (row >= img.shape.rows || col >= img.shape.cols) {
         fprintf(stderr, "bad indexing!\n");
         exit(1);
@@ -23,7 +23,7 @@ uint8_t _get(Image img, size_t row, size_t col) {
 }
 
 // curr_img[j*28 + i] = value;
-void _set(Image img, size_t row, size_t col, uint8_t value) {
+void _set_pixel(Image img, size_t row, size_t col, uint8_t value) {
     if (row >= img.shape.rows || col >= img.shape.cols) {
         fprintf(stderr, "bad indexing!\n");
         exit(1);
@@ -41,8 +41,8 @@ Image _index(Dataset* dataset, size_t index) {
         .lbl = dataset->labels+index,
         .shape = dataset->shape,
         .label = _label,
-        .get = _get,
-        .set = _set,
+        .get = _get_pixel,
+        .set = _set_pixel,
 
         .print = _print_img
     };
