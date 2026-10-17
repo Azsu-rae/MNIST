@@ -6,11 +6,11 @@
 
 #include "mnist.h"
 
-#define TRAIN_IMG "./dataset/train-images.idx3-ubyte"
-#define TRAIN_LBL "./dataset/train-labels.idx1-ubyte"
+#define TRAIN_IMGs "./dataset/train-images.idx3-ubyte"
+#define TRAIN_LBLs "./dataset/train-labels.idx1-ubyte"
 
-#define TEST_IMG "./dataset/t10k-images.idx3-ubyte"
-#define TEST_LBL "./dataset/t10k-labels.idx1-ubyte"
+#define TEST_IMGs "./dataset/t10k-images.idx3-ubyte"
+#define TEST_LBLs "./dataset/t10k-labels.idx1-ubyte"
 
 /*
  *
@@ -95,9 +95,9 @@ Dataset* _scratch(const char* lbl, const char* img) {
 }
 
 Dataset* test() {
-    return _scratch(TEST_LBL, TEST_IMG);
+    return _scratch(TEST_LBLs, TEST_IMGs);
 }
 
 Dataset* train() {
-    return _scratch(TRAIN_LBL, TRAIN_IMG);
+    return _scratch(TRAIN_LBLs, TRAIN_IMGs);
 }
